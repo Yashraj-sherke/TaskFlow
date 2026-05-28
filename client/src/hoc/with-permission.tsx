@@ -10,23 +10,34 @@ const withPermission = (
   requiredPermission: PermissionType
 ) => {
   const WithPermission = (props: any) => {
-    const { user, hasPermission, isLoading } = useAuthContext();
+    const { user, hasPermission, isLoading, workspaceLoading } =
+      useAuthContext();
     const navigate = useNavigate();
     const workspaceId = useWorkspaceId();
 
     useEffect(() => {
+      if (isLoading || workspaceLoading) return;
+
       if (!user || !hasPermission(requiredPermission)) {
         navigate(`/workspace/${workspaceId}`);
       }
-    }, [user, hasPermission, navigate, workspaceId]);
+    }, [
+      user,
+      hasPermission,
+      isLoading,
+      workspaceLoading,
+      navigate,
+      requiredPermission,
+      workspaceId,
+    ]);
 
-    if (isLoading) {
+    if (isLoading || workspaceLoading) {
       return <div>Loading...</div>;
     }
 
     // Check if user has the required permission
     if (!user || !hasPermission(requiredPermission)) {
-      return;
+      return null;
     }
     // If the user has permission, render the wrapped component
     return <WrappedComponent {...props} />;
