@@ -9,6 +9,10 @@ Taskflow is a full-stack project management application built for teams that wor
 
 The goal of this project is to show how a real SaaS-style collaboration platform can be built using the MERN stack with authentication, role-based access control, workspace management, analytics, AI chat, and document workflows.
 
+## Screenshot:
+<img width="1907" height="857" alt="image" src="https://github.com/user-attachments/assets/5a8d95b3-24e4-4155-9d71-ea967c2fab29" />
+
+
 ## Project Story
 
 The idea for Taskflow came from a simple problem: most teams do not work in just one place. A freelancer may handle multiple clients, a startup may have different departments, and an agency may manage several projects at the same time.
