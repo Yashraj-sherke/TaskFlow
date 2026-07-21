@@ -7,6 +7,7 @@ import connectDatabase from "./config/database.config";
 import { errorHandler } from "./middlewares/errorHandler.middleware";
 import { HTTPSTATUS } from "./config/http.config";
 import { asyncHandler } from "./middlewares/asyncHandler.middleware";
+import { seedRoles } from "./seeders/role.seeder";
 
 
 import "./config/passport.config";
@@ -32,6 +33,33 @@ app.use(express.json());
 
 app.use(express.urlencoded({ extended: true }));
 
+// CORS must be applied BEFORE session/passport so preflight OPTIONS requests succeed
+const corsOrigins = config.FRONTEND_ORIGIN
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      
+      // Allow if the origin exactly matches the FRONTEND_ORIGIN in .env
+      if (corsOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      
+      // Dynamically allow any Vercel deployment URL
+      if (origin.endsWith(".vercel.app")) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+  })
+);
+
 app.use(
   session({
     name: "session",
@@ -46,18 +74,6 @@ app.use(
 
 app.use(passport.initialize());
 app.use(passport.session());
-
-const corsOrigins = config.FRONTEND_ORIGIN
-  .split(",")
-  .map((origin) => origin.trim())
-  .filter(Boolean);
-
-app.use(
-  cors({
-    origin: corsOrigins,
-    credentials: true,
-  })
-);
 
 app.get(
   `/`,
@@ -84,4 +100,6 @@ app.use(errorHandler);
 app.listen(config.PORT, async () => {
   console.log(`Server listening on port ${config.PORT} in ${config.NODE_ENV}`);
   await connectDatabase();
+  // Auto-seed roles so OWNER/ADMIN/MEMBER roles always exist
+  await seedRoles();
 });
