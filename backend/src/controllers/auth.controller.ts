@@ -133,10 +133,35 @@ export const registerUserController = asyncHandler(
       ...req.body,
     });
 
-    await registerUserService(body);
+    const { userId, workspaceId } = await registerUserService(body);
+
+    // Auto-login: verify the newly created user and establish a session
+    const user = await UserModel.findById(userId)
+      .populate("currentWorkspace")
+      .select("-password");
+
+    if (!user) {
+      return res.status(HTTPSTATUS.INTERNAL_SERVER_ERROR).json({
+        message: "User created but could not be retrieved",
+      });
+    }
+
+    const userObject = user.toObject();
+
+    // Establish session so the user is immediately logged in
+    await new Promise<void>((resolve, reject) => {
+      req.logIn(userObject, (err) => {
+        if (err) return reject(err);
+        resolve();
+      });
+    });
 
     return res.status(HTTPSTATUS.CREATED).json({
       message: "User created successfully",
+      user: {
+        _id: user._id,
+        currentWorkspace: workspaceId,
+      },
     });
   }
 );
